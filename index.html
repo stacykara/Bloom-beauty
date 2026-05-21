@@ -140,13 +140,9 @@ const SERVICES_KEY  = "bloom:services_v2";
 const SETTINGS_KEY  = "bloom:settings_v1";
 
 const DEFAULT_MATERIALS = [
-  { id:"1", name:"Гель-лак OPI",        price:1200, unit:"мл", volume:15,  stock:12  },
-  { id:"2", name:"База каучуковая",      price:800,  unit:"мл", volume:30,  stock:22  },
-  { id:"3", name:"Топ без липкого слоя", price:950,  unit:"мл", volume:10,  stock:3   },
-  { id:"4", name:"Ацетон",               price:120,  unit:"мл", volume:500, stock:480 },
-  { id:"5", name:"Хна для бровей",       price:650,  unit:"г",  volume:10,  stock:1.5 },
-  { id:"6", name:"Перчатки нитрил",      price:350,  unit:"шт", volume:100, stock:8   },
+  { id:"1", name:"Пример: Гель-лак", price:1200, unit:"мл", volume:15, stock:15 },
 ];
+const ONBOARDING_KEY = "bloom:onboarding_done";
 
 const DEFAULT_SETTINGS = {
   laborRate:600, rentEnabled:false, rentType:"day",
@@ -195,13 +191,19 @@ function App() {
   const [restockId,  setRestockId]  = useState(null);
   const [restockAmt, setRestockAmt] = useState("");
   const [toast, setToast] = useState("");
+  const [onboarding, setOnboarding] = useState(false);
+  const [onbStep, setOnbStep] = useState(0);
 
   const showToast = (msg) => { setToast(msg); setTimeout(()=>setToast(""),2500); };
+
+  const finishOnboarding = () => { setOnboarding(false); lsSet(ONBOARDING_KEY, true); };
 
   useEffect(()=>{
     const m=lsGet(MATERIALS_KEY); setMaterials(m||DEFAULT_MATERIALS);
     const s=lsGet(SERVICES_KEY);  if(s) setServices(s);
     const st=lsGet(SETTINGS_KEY); if(st) setSettings({...DEFAULT_SETTINGS,...st});
+    const done=lsGet(ONBOARDING_KEY);
+    if(!done) setOnboarding(true);
     setLoaded(true);
   },[]);
 
@@ -274,6 +276,71 @@ function App() {
   return (
     <div>
       {toast && <div className="toast">{toast}</div>}
+
+      {onboarding && (() => {
+        const steps = [
+          {
+            icon:"🌸",
+            title:"Добро пожаловать в Bloom!",
+            text:"Калькулятор себестоимости для бьюти-мастеров. Давай покажем как всё работает — займёт меньше минуты!",
+            btn:"Начать →",
+            tab: null,
+          },
+          {
+            icon:"🧴",
+            title:"Каталог материалов",
+            text:"Здесь хранятся все твои расходные материалы. Добавь название, цену упаковки и объём — приложение само посчитает стоимость за 1 мл/г/шт.",
+            btn:"Далее →",
+            tab:"catalog",
+          },
+          {
+            icon:"⚙️",
+            title:"Настройки мастера",
+            text:"Укажи свою ставку в час и стоимость аренды рабочего места. Эти данные будут автоматически учитываться в каждом расчёте.",
+            btn:"Далее →",
+            tab:"settings",
+          },
+          {
+            icon:"🧮",
+            title:"Расчёт услуги",
+            text:"Выбирай материалы из каталога, указывай расход и длительность — приложение считает себестоимость и рекомендует цену для клиента с нужной наценкой.",
+            btn:"Далее →",
+            tab:"calc",
+          },
+          {
+            icon:"📦",
+            title:"Учёт остатков",
+            text:"После каждой услуги остатки материалов списываются автоматически. Когда что-то заканчивается — появится предупреждение и кнопка «Пополнить».",
+            btn:"Далее →",
+            tab:"catalog",
+          },
+          {
+            icon:"🎉",
+            title:"Всё готово!",
+            text:"Начни с добавления своих материалов в каталог, затем настрой ставку мастера — и первый расчёт займёт 30 секунд!",
+            btn:"Начать работу",
+            tab: null,
+          },
+        ];
+        const step = steps[onbStep];
+        if(step.tab && tab!==step.tab) setTab(step.tab);
+        return <div style={{position:"fixed",inset:0,background:"rgba(44,24,16,0.55)",zIndex:200,display:"flex",alignItems:"flex-end",justifyContent:"center",backdropFilter:"blur(3px)"}}>
+          <div style={{background:"var(--white)",borderRadius:"24px 24px 0 0",padding:"24px 22px 36px",width:"100%",maxWidth:430,animation:"slideUp .3s ease"}}>
+            <div style={{display:"flex",justifyContent:"flex-end",marginBottom:4}}>
+              <button onClick={finishOnboarding} style={{border:"none",background:"none",color:"var(--light)",fontSize:13,cursor:"pointer",fontFamily:"Nunito,sans-serif",fontWeight:600}}>Пропустить</button>
+            </div>
+            <div style={{textAlign:"center",marginBottom:16}}>
+              <div style={{fontSize:48,marginBottom:10}}>{step.icon}</div>
+              <div style={{fontFamily:"Playfair Display,serif",fontSize:20,fontWeight:700,color:"var(--dark)",marginBottom:8}}>{step.title}</div>
+              <div style={{fontSize:14,color:"var(--mid)",lineHeight:1.5}}>{step.text}</div>
+            </div>
+            <div style={{display:"flex",gap:6,justifyContent:"center",marginBottom:16}}>
+              {steps.map((_,i)=><div key={i} style={{width:i===onbStep?20:6,height:6,borderRadius:3,background:i===onbStep?"var(--rose)":"var(--rose-light)",transition:"all .3s"}}/>)}
+            </div>
+            <button className="btn btn-primary" onClick={()=>{ if(onbStep<steps.length-1){setOnbStep(onbStep+1);}else{finishOnboarding();} }}>{step.btn}</button>
+          </div>
+        </div>;
+      })()}
       <div className="app">
         <div className="header">
           <div className="header-logo">
@@ -375,18 +442,24 @@ function App() {
             <div className="card">
               <div style={{fontWeight:700,fontSize:12,color:"var(--mid)",marginBottom:9,textTransform:"uppercase",letterSpacing:".6px"}}>Время и стоимость работы</div>
               <div className="input-group">
-                <div className="input-label">Длительность (часов)</div>
-                <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-                  <input className="input" type="number" min="0.25" step="0.25" value={timeHours} onChange={e=>setTimeHours(parseFloat(e.target.value)||0)} style={{width:80,flex:"none"}}/>
-                  <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-                    {[0.5,1,1.5,2,3,4,5,6,7,8,9,10].map(h=>(
-                      <button key={h} className="hour-btn" onClick={()=>setTimeHours(h)}
-                        style={{borderColor:timeHours===h?"var(--rose)":"var(--rose-light)",background:timeHours===h?"var(--rose-pale)":"transparent",color:timeHours===h?"var(--rose-deep)":"var(--light)"}}>
-                        {h}ч
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                <div className="input-label">Длительность услуги</div>
+                <select className="input" value={timeHours} onChange={e=>setTimeHours(parseFloat(e.target.value))}>
+                  {Array.from({length:20},(_,i)=>(i+1)*0.5).map(h=>{
+                    const hh=Math.floor(h), mm=h%1===0.5?30:0;
+                    let label="";
+                    if(hh===0) label="30 мин";
+                    else if(mm===0){
+                      if(hh===1) label="1 час";
+                      else if(hh>=2&&hh<=4) label=`${hh} часа`;
+                      else label=`${hh} часов`;
+                    } else {
+                      if(hh===1) label="1 час 30 мин";
+                      else if(hh>=2&&hh<=4) label=`${hh} часа 30 мин`;
+                      else label=`${hh} часов 30 мин`;
+                    }
+                    return <option key={h} value={h}>{label}</option>;
+                  })}
+                </select>
               </div>
               <div style={{background:"var(--rose-pale)",borderRadius:11,padding:"9px 12px",marginBottom:10}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
