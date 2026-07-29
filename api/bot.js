@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════
-const TOKEN   = "8702981635:AAFwO76YWHR4CmwLjATr0YwBHpE-1n1JqEs";
+const TOKEN   = "8702981635:AAH-SGgSnkVGh47j5bfTtzSotQb9sp1sFKA";
 const APP_URL = "https://bloom-beauty-app.vercel.app";
 const LOGO_URL = "https://raw.githubusercontent.com/stacykara/Bloom-beauty/main/logo.png";
 // ═══════════════════════════════════════════════
