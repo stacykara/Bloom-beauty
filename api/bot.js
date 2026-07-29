@@ -1,8 +1,12 @@
 // ═══════════════════════════════════════════════
-const TOKEN   = "8702981635:AAH-SGgSnkVGh47j5bfTtzSotQb9sp1sFKA";
-const APP_URL = "https://bloom-beauty-app.vercel.app";
-const LOGO_URL = "https://raw.githubusercontent.com/stacykara/Bloom-beauty/main/logo.png";
+const TOKEN   = process.env.BOT_TOKEN;
+const APP_URL = process.env.APP_URL  || "https://bloom-beauty-app.vercel.app";
+const LOGO_URL = process.env.LOGO_URL || "https://raw.githubusercontent.com/stacykara/Bloom-beauty/main/logo.png";
 // ═══════════════════════════════════════════════
+
+if (!TOKEN) {
+  throw new Error("BOT_TOKEN is not set. Add it in Vercel → Settings → Environment Variables.");
+}
 
 const API = `https://api.telegram.org/bot${TOKEN}`;
 
